@@ -87,7 +87,7 @@ const AdminPage: React.FC = () => {
     localStorage.removeItem("adminAuthenticated");
     localStorage.removeItem("adminLoginTime");
     setIsAuthenticated(false);
-    navigate("/");
+    navigate("/admin");
   };
 
   const loadUsers = async (page: number, search: string) => {
@@ -270,7 +270,7 @@ const AdminPage: React.FC = () => {
                 <tr className="bg-purple-50 border-b border-gray-200 text-xs text-gray-600 uppercase tracking-wider">
                   <th className="text-left py-3 px-4">Name</th>
                   <th className="text-left py-3 px-4">Phone</th>
-                  <th className="text-center py-3 px-3">Game</th>
+                  <th className="text-center py-3 px-3">Game Count</th>
                   <th className="text-center py-3 px-3">Photo</th>
                   <th className="text-center py-3 px-3">Tier</th>
                   <th className="text-center py-3 px-3">Redeemed</th>
@@ -283,7 +283,9 @@ const AdminPage: React.FC = () => {
                     <td className="py-3 px-4 text-sm font-body">{user.phoneNumber}</td>
                     <td className="py-3 px-3 text-center">
                       {user.gameProgress?.game?.completed ? (
-                        <span className="text-green-600 font-semibold">✓</span>
+                        <span className="text-green-600 font-semibold">
+                          {user.gameProgress.game.scanCount || 1}
+                        </span>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}

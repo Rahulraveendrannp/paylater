@@ -48,6 +48,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     isRedeemed?: boolean;
   } | null>(null);
   const [showRedeemPopup, setShowRedeemPopup] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string>("");
 
   useEffect(() => {
     loadProgress();
@@ -115,6 +116,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       if (response.success) {
         setShowScanner(false);
         setSelectedActivity(null);
+        // Show activity-specific success message
+        if (selectedActivity.type === 'game') {
+          setSuccessMessage("Scan successful! You can play the game again.");
+        } else {
+          setSuccessMessage("Scan successful!");
+        }
+        // Auto-dismiss success message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 3000);
         // Reload progress to update UI
         await loadProgress();
         return { success: true };
@@ -175,10 +186,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
           const progress = gameProgress?.[activity.type];
           const isCompleted = progress?.completed || false;
+          const isRedeemed = gameProgress?.isRedeemed || false;
 
-          // Game: allow clicking even when completed (to scan again)
+          // Don't allow clicking if game is redeemed (no more scans after redemption)
+          // Game: allow clicking even when completed (to scan again) unless redeemed
           // Photo: only allow clicking when not completed (one-time only)
-          const canClick = activity.type === 'game' || !isCompleted;
+          const canClick = (activity.type === 'game' ? !isRedeemed : true) && (activity.type === 'game' || !isCompleted);
 
           return (
             <div
@@ -216,7 +229,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
               {/* Completion status text - always reserve space for alignment */}
               <div className="text-center h-5">
-                {isCompleted ? (
+                {activity.type === 'game' && isRedeemed ? (
+                  <p className="text-xs text-[#291F5B] font-semibold">
+                    One-time gift redeemed
+                  </p>
+                ) : isCompleted ? (
                   <p className="text-xs text-[#291F5B] font-semibold">
                     Completed
                   </p>
@@ -240,15 +257,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             Redeem Gift
           </button>
           <div></div>
-        </div>
-      )}
-
-      {/* One-time gift redeemed text */}
-      {gameProgress?.isRedeemed && (
-        <div className="w-[90%] text-center mb-4">
-          <p className="text-gray-200 text-sm font-body">
-            One-time gift redeemed
-          </p>
         </div>
       )}
 
@@ -295,6 +303,40 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             loadProgress(); // Reload to check if redeemed
           }}
         />
+      )}
+
+      {/* Success Popup Modal (SweetAlert style) */}
+      {successMessage && (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-in">
+            <div className="flex flex-col items-center text-center">
+              {/* Success Icon */}
+              <div className="w-20 h-20 rounded-full bg-[#14B8A6] flex items-center justify-center mb-4 animate-bounce-in">
+                <svg
+                  className="w-12 h-12 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              
+              {/* Message */}
+              <h3 className="text-xl font-heading text-gray-800 mb-2">
+                Success!
+              </h3>
+              <p className="text-gray-600 font-body text-base">
+                {successMessage}
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

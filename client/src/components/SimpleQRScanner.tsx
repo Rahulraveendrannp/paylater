@@ -428,7 +428,7 @@ const SimpleQRScanner: React.FC<SimpleQRScannerProps> = ({
                   onClose();
                 }, 300);
               }}
-              className="text-gray-300 hover:text-white p-2"
+              className="text-[#14B8A6] hover:text-[#0D9488] p-2 transition-colors"
             >
             <svg
               className="w-6 h-6"
