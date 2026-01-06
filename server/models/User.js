@@ -53,11 +53,10 @@ const userSchema = new mongoose.Schema({
     }
   },
   // User's redemption QR code (generated after first scan)
+  // Note: unique and sparse are defined in the index below, not here
   redemptionQRCode: {
-    type: String,
-    unique: true,
-    sparse: true,
-    default: null
+    type: String
+    // No default - undefined is better for sparse unique indexes
   },
   // Whether user has redeemed their gift
   isRedeemed: {
@@ -85,10 +84,16 @@ const userSchema = new mongoose.Schema({
 // Indexes for performance
 userSchema.index({ phoneNumber: 1 });
 userSchema.index({ createdAt: -1 });
+// Explicit sparse unique index for redemptionQRCode (excludes null/undefined values)
+userSchema.index({ redemptionQRCode: 1 }, { unique: true, sparse: true });
 
-// Pre-save middleware to update updatedAt
+// Pre-save middleware to update updatedAt and ensure redemptionQRCode is undefined (not null) if not set
 userSchema.pre('save', function(next) {
   this.updatedAt = new Date();
+  // Ensure redemptionQRCode is undefined (not null) for sparse index to work correctly
+  if (this.redemptionQRCode === null) {
+    this.redemptionQRCode = undefined;
+  }
   next();
 });
 
