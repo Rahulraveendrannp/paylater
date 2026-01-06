@@ -101,11 +101,12 @@ userSchema.statics.findByPhoneNumber = function(phoneNumber) {
 userSchema.statics.generateUniqueRedemptionQRCode = async function() {
   const generateQRCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = 'PAYLATER_REDEEM_';
-    for (let i = 0; i < 12; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    // Include timestamp and random component for better uniqueness
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const randomPart = Array.from({ length: 8 }, () => 
+      chars.charAt(Math.floor(Math.random() * chars.length))
+    ).join('');
+    return `PAYLATER_REDEEM_${timestamp}_${randomPart}`;
   };
 
   try {
@@ -127,14 +128,14 @@ userSchema.statics.generateUniqueRedemptionQRCode = async function() {
       console.log(`🔄 Attempt ${attempts}: QR code ${qrCode} already exists, trying again...`);
     }
     
-    // Fallback with timestamp
-    const fallbackCode = `PAYLATER_REDEEM_TEMP_${Date.now().toString().slice(-10)}`;
+    // Fallback with timestamp and random
+    const fallbackCode = `PAYLATER_REDEEM_TEMP_${Date.now()}_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
     console.log('⚠️ Using fallback redemption QR code:', fallbackCode);
     return fallbackCode;
     
   } catch (error) {
     console.error('❌ Error in generateUniqueRedemptionQRCode:', error);
-    const fallbackCode = `PAYLATER_REDEEM_ERROR_${Date.now().toString().slice(-10)}`;
+    const fallbackCode = `PAYLATER_REDEEM_ERROR_${Date.now()}_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
     console.log('🆘 Using error fallback redemption QR code:', fallbackCode);
     return fallbackCode;
   }

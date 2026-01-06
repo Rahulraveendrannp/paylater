@@ -17,7 +17,15 @@ const errorHandler = (err, req, res, next) => {
   // Mongoose duplicate key
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
-    const message = `${field} already exists`;
+    // Provide user-friendly error messages
+    let message;
+    if (field === 'redemptionQRCode') {
+      message = 'A technical error occurred. Please try again.';
+    } else if (field === 'phoneNumber') {
+      message = 'This phone number is already registered';
+    } else {
+      message = `${field} already exists`;
+    }
     err = new AppError(message, 400);
   }
 

@@ -88,7 +88,31 @@ router.post('/', authMiddleware, asyncHandler(async (req, res, next) => {
   }
 
   user.updatedAt = new Date();
-  await user.save();
+  
+  // Retry logic for handling duplicate key errors (race conditions)
+  let retries = 0;
+  const maxRetries = 3;
+  while (retries < maxRetries) {
+    try {
+      await user.save();
+      break; // Success, exit retry loop
+    } catch (saveError) {
+      // If it's a duplicate key error for redemptionQRCode, regenerate and retry
+      if (saveError.code === 11000 && saveError.keyPattern && saveError.keyPattern.redemptionQRCode) {
+        retries++;
+        if (retries >= maxRetries) {
+          console.error('❌ Failed to save after retries:', saveError);
+          return next(new AppError('Failed to process scan. Please try again.', 500));
+        }
+        // Regenerate QR code and retry
+        console.log(`🔄 Retry ${retries}: Regenerating redemption QR code due to duplicate...`);
+        user.redemptionQRCode = await User.generateUniqueRedemptionQRCode();
+      } else {
+        // Different error, throw it
+        throw saveError;
+      }
+    }
+  }
 
   res.status(200).json({
     success: true,
