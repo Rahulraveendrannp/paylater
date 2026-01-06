@@ -7,8 +7,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'heading': ['Arial Black', 'sans-serif'],
-        'body': ['Arial', 'sans-serif'],
+        'sans': ['Aspekta', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
+        'heading': ['Aspekta', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
+        'body': ['Aspekta', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
       },
       colors: {
         'paylater-purple': '#4A148C',

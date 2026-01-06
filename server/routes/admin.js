@@ -49,7 +49,20 @@ router.get('/users', asyncHandler(async (req, res, next) => {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
-    .select('phoneNumber name gameProgress redemptionQRCode isRedeemed redeemedAt createdAt');
+    .select('phoneNumber name gameProgress redemptionQRCode isRedeemed redeemedAt createdAt')
+    .lean();
+  
+  // Ensure gameStartCount is included in the response
+  const usersWithGameStartCount = users.map(user => ({
+    ...user,
+    gameProgress: {
+      ...user.gameProgress,
+      game: user.gameProgress?.game ? {
+        ...user.gameProgress.game,
+        gameStartCount: user.gameProgress.game.gameStartCount || 0
+      } : undefined
+    }
+  }));
 
   const totalUsers = await User.countDocuments(searchQuery);
   const totalPages = Math.ceil(totalUsers / limit);
@@ -57,7 +70,7 @@ router.get('/users', asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {
-      users,
+      users: usersWithGameStartCount,
       pagination: {
         page,
         limit,
@@ -112,11 +125,11 @@ router.get('/statistics', asyncHandler(async (req, res, next) => {
   const totalUsers = await User.countDocuments();
   const redeemedUsers = await User.countDocuments({ isRedeemed: true });
   
-  // Calculate total game scans (sum of all scanCount values)
-  const usersWithGame = await User.find({ 'gameProgress.game.completed': true })
-    .select('gameProgress.game.scanCount');
-  const gameCompleted = usersWithGame.reduce((total, user) => {
-    return total + (user.gameProgress?.game?.scanCount || 1);
+  // Calculate total game starts (sum of all gameStartCount values)
+  const usersWithGameStarted = await User.find({ 'gameProgress.game.gameStarted': true })
+    .select('gameProgress.game.gameStartCount');
+  const gameCompleted = usersWithGameStarted.reduce((total, user) => {
+    return total + (user.gameProgress?.game?.gameStartCount || 1);
   }, 0);
   
   const photoCompleted = await User.countDocuments({ 'gameProgress.photo.completed': true });

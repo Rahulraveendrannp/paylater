@@ -92,12 +92,17 @@ export class PayLaterAPI {
 
       const data = await response.json();
 
-      if (response.status === 401 || data.error?.includes("token")) {
+      if (response.status === 401 || data.error?.includes("token") || data.message?.includes("token")) {
         clearToken();
         return {
           success: false,
           error: "Session expired. Please register again.",
         };
+      }
+
+      // If response is not successful, ensure error field is set
+      if (!data.success && !data.error && data.message) {
+        data.error = data.message;
       }
 
       return data;

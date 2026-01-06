@@ -15,6 +15,10 @@ const userSchema = new mongoose.Schema({
   // Game progress tracking
   gameProgress: {
     game: {
+      gameStarted: {
+        type: Boolean,
+        default: false
+      },
       completed: {
         type: Boolean,
         default: false
@@ -35,6 +39,10 @@ const userSchema = new mongoose.Schema({
       scanCount: {
         type: Number,
         default: 0
+      },
+      gameStartCount: {
+        type: Number,
+        default: 0
       }
     },
     photo: {
@@ -49,6 +57,10 @@ const userSchema = new mongoose.Schema({
       scannedAt: {
         type: Date,
         default: null
+      },
+      scanCount: {
+        type: Number,
+        default: 0
       }
     }
   },

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PayLaterAPI } from "../api";
 import SimpleQRScanner from "./SimpleQRScanner";
-import RedeemGiftPopup from "./RedeemGiftPopup";
 
 interface DashboardProps {
   phoneNumber: string;
@@ -38,16 +37,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [gameProgress, setGameProgress] = useState<{
     game?: {
+      gameStarted?: boolean;
       completed: boolean;
       tier?: number;
       scanCount?: number;
     };
     photo?: {
       completed: boolean;
+      scanCount?: number;
     };
     isRedeemed?: boolean;
   } | null>(null);
-  const [showRedeemPopup, setShowRedeemPopup] = useState(false);
+  const [isRedeemMode, setIsRedeemMode] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
 
   useEffect(() => {
@@ -83,6 +84,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     setSelectedActivity(activity);
     setShowScanner(true);
     setErrorMessage("");
+    setIsRedeemMode(false);
+  };
+
+  const handleOpenRedeemScanner = () => {
+    if (isSubmitting) {
+      return;
+    }
+    // Create a temporary activity for redeem mode
+    setSelectedActivity({ id: "redeem", type: "game", title: "Redeem Gift", description: "Scan a tier QR code to redeem your gift" });
+    setShowScanner(true);
+    setErrorMessage("");
+    setIsRedeemMode(true);
   };
 
   const handleScanSuccess = async (scannedQRCode: string): Promise<{ success: boolean; message?: string }> => {
@@ -94,15 +107,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     const trimmedQR = scannedQRCode.trim();
     let validQRCodes: string[] = [];
 
-    if (selectedActivity.type === 'game') {
+    if (isRedeemMode) {
+      // In redeem mode, only allow tier QR codes
       validQRCodes = ['PAYLATER_GAME_TIER1', 'PAYLATER_GAME_TIER2'];
+    } else if (selectedActivity.type === 'game') {
+      // Check if game has been started
+      const gameStarted = gameProgress?.game?.gameStarted || false;
+      if (gameStarted) {
+        // After game started, allow tier QR codes
+        validQRCodes = ['PAYLATER_GAME_TIER1', 'PAYLATER_GAME_TIER2'];
+      } else {
+        // Before game started, only allow start QR code
+        validQRCodes = ['PAYLATER_GAME_START'];
+      }
     } else if (selectedActivity.type === 'photo') {
       validQRCodes = ['PAYLATER_PHOTO'];
     }
 
     // Check if scanned QR code matches any valid code
     if (!validQRCodes.includes(trimmedQR)) {
-      const errorMsg = "Invalid QR code. Please scan the correct QR code for this activity.";
+      const errorMsg = isRedeemMode 
+        ? "Invalid QR code. Please scan a tier QR code (TIER1 or TIER2)."
+        : "Invalid QR code. Please scan the correct QR code for this activity.";
       setErrorMessage(errorMsg);
       return { success: false, message: errorMsg };
     }
@@ -116,9 +142,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       if (response.success) {
         setShowScanner(false);
         setSelectedActivity(null);
+        setIsRedeemMode(false);
         // Show activity-specific success message
-        if (selectedActivity.type === 'game') {
-          setSuccessMessage("Scan successful! You can play the game again.");
+        if (isRedeemMode) {
+          setSuccessMessage("Gift Redeemed!");
+        } else if (selectedActivity.type === 'game') {
+          const gameStarted = gameProgress?.game?.gameStarted || false;
+          if (!gameStarted && trimmedQR === 'PAYLATER_GAME_START') {
+            setSuccessMessage("You can start the game now!");
+          } else if (trimmedQR === 'PAYLATER_GAME_TIER1' || trimmedQR === 'PAYLATER_GAME_TIER2') {
+            setSuccessMessage("Gift Redeemed!");
+          } else {
+            setSuccessMessage("Scan successful! You can play the game again.");
+          }
         } else {
           setSuccessMessage("Scan successful!");
         }
@@ -130,7 +166,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         await loadProgress();
         return { success: true };
       } else {
-        const errorMsg = response.error || "Unable to record this scan. Please try again.";
+        // Check both error and message fields (backend returns message)
+        const errorMsg = response.error || response.message || "Unable to record this scan. Please try again.";
+        console.error("Scan error:", response);
         setErrorMessage(errorMsg);
         return { success: false, message: errorMsg };
       }
@@ -148,6 +186,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     setShowScanner(false);
     setSelectedActivity(null);
     setErrorMessage("");
+    setIsRedeemMode(false);
   };
 
   return (
@@ -164,7 +203,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           alt="HELLO JAWS"
           className="w-full max-w-[160px] md:max-w-[180px] mx-auto mb-4"
         />
-        <p className="text-gray-200 text-base md:text-lg mt-4 text-center w-[80%] mx-auto">
+        <p className="text-gray-200 text-base md:text-lg mt-4 text-center w-[80%] mx-auto font-normal">
           Scan the QR code to start the activity of your choice.
         </p>
       </div>
@@ -187,11 +226,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           const progress = gameProgress?.[activity.type];
           const isCompleted = progress?.completed || false;
           const isRedeemed = gameProgress?.isRedeemed || false;
+          const gameStarted = activity.type === 'game' ? (gameProgress?.game?.gameStarted || false) : false;
 
-          // Don't allow clicking if game is redeemed (no more scans after redemption)
-          // Game: allow clicking even when completed (to scan again) unless redeemed
-          // Photo: only allow clicking when not completed (one-time only)
-          const canClick = (activity.type === 'game' ? !isRedeemed : true) && (activity.type === 'game' || !isCompleted);
+          // Photo: allow clicking always (multiple scans allowed)
+          // Game: allow clicking always (can scan start QR, then tier QRs)
+          const canClick = true;
 
           return (
             <div
@@ -233,7 +272,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                   <p className="text-xs text-[#291F5B] font-semibold">
                     One-time gift redeemed
                   </p>
-                ) : isCompleted ? (
+                ) : activity.type === 'game' && gameStarted && !isCompleted ? (
+                  <p className="text-xs text-[#291F5B] font-semibold">
+                    Game Started
+                  </p>
+                ) : activity.type === 'game' && isCompleted ? (
                   <p className="text-xs text-[#291F5B] font-semibold">
                     Completed
                   </p>
@@ -246,11 +289,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         })}
       </div>
 
-      {/* Redeem Gift Button - Show if any activity completed and not redeemed, positioned below game card */}
-      {gameProgress && (gameProgress.game?.completed || gameProgress.photo?.completed) && !gameProgress.isRedeemed && (
+      {/* Redeem Gift Button - Show if game started and not redeemed */}
+      {gameProgress && gameProgress.game?.gameStarted && !gameProgress.isRedeemed && (
         <div className="w-full max-w-2xl grid grid-cols-2 gap-4 mb-4">
           <button
-            onClick={() => setShowRedeemPopup(true)}
+            onClick={handleOpenRedeemScanner}
             className="w-full text-white py-2 rounded-xl text-lg font-body font-semibold shadow-lg hover:opacity-90 transition-opacity"
             style={{ backgroundColor: '#7F6BEB' }}
           >
@@ -263,7 +306,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       {/* Logout button */}
       <button
         onClick={onLogout}
-        className="w-[90%] bg-[#14B8A6] text-white py-2 rounded-xl text-lg font-body font-semibold shadow-lg hover:bg-[#0D9488] transition-colors mt-12 mb-8"
+        className="w-[90%] bg-[#14B8A6] text-white py-2 rounded-xl text-lg font-body shadow-lg hover:bg-[#0D9488] transition-colors mt-12 mb-8"
       >
         Logout
       </button>
@@ -279,10 +322,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             </button>
 
             <h3 className="text-xl font-heading mb-2">
-              Scan QR Code for {selectedActivity.title}
+              {isRedeemMode ? "Redeem Your Gift" : `Scan QR Code for ${selectedActivity.title}`}
             </h3>
             <p className="text-sm text-gray-300 mb-4">
-              {selectedActivity.description}
+              {isRedeemMode ? "Scan a tier QR code (TIER1 or TIER2) to redeem your gift." : selectedActivity.description}
             </p>
 
             <SimpleQRScanner
@@ -295,19 +338,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         </div>
       )}
 
-      {/* Redeem Gift Popup */}
-      {showRedeemPopup && (
-        <RedeemGiftPopup
-          onClose={() => {
-            setShowRedeemPopup(false);
-            loadProgress(); // Reload to check if redeemed
-          }}
-        />
-      )}
-
       {/* Success Popup Modal (SweetAlert style) */}
       {successMessage && (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-in">
             <div className="flex flex-col items-center text-center">
               {/* Success Icon */}

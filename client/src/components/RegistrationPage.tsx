@@ -47,7 +47,7 @@ const COUNTRY_CODES = [
 const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
   const [localPhone, setLocalPhone] = useState("");
   const [name, setName] = useState("");
-  const [countryCode, setCountryCode] = useState("+971"); // Default to UAE
+  const [countryCode, setCountryCode] = useState("+974"); // Default to Qatar
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -111,7 +111,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
         {/* Name input - Label inside left section */}
         <div className="w-full">
           <div className="flex bg-white rounded-lg overflow-hidden">
-            <div className="w-[140px] px-2 py-3 bg-white border-r border-gray-300 text-[#4A148C] font-body font-medium flex items-center">
+            <div className="w-[140px] px-2 py-3 bg-white border-r border-gray-300 text-[#4A148C] font-semibold flex items-center">
               Name
             </div>
             <input
@@ -121,7 +121,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
                 setName(e.target.value);
                 if (error) setError("");
               }}
-              className="flex-1 px-4 py-3 bg-white text-gray-800 focus:outline-none font-body"
+              className="flex-1 px-4 py-3 bg-white text-gray-800 focus:outline-none font-semibold"
               placeholder=""
               disabled={isLoading}
             />
@@ -138,7 +138,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
                   setCountryCode(e.target.value);
                   if (error) setError("");
                 }}
-                className="text-[#4A148C] font-body focus:outline-none cursor-pointer appearance-none pr-6 bg-transparent w-full"
+                className="text-[#4A148C]  focus:outline-none cursor-pointer appearance-none pr-6 bg-transparent w-full"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234A148C' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
@@ -161,7 +161,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
                 setLocalPhone(val);
                 if (error) setError("");
               }}
-              className="flex-1 px-4 py-3 bg-white text-gray-800 focus:outline-none font-body"
+              className="flex-1 px-4 py-3 bg-white text-gray-800 focus:outline-none font-semibold"
               placeholder=""
               disabled={isLoading}
               maxLength={15}

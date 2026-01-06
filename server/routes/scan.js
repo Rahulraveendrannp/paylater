@@ -35,32 +35,56 @@ router.post('/', authMiddleware, asyncHandler(async (req, res, next) => {
   if (activityType === 'game') {
     // For game: validate QR code format (exact match required)
     const trimmedQR = qrCode.trim();
-    let tier = null;
     
-    // Exact match validation for game QR codes
-    if (trimmedQR === 'PAYLATER_GAME_TIER1') {
-      tier = 1;
-    } else if (trimmedQR === 'PAYLATER_GAME_TIER2') {
-      tier = 2;
-    } else {
-      return next(new AppError('Invalid QR code. Please scan the correct QR code for game activity.', 400));
-    }
-
-    // If first time scanning, set tier and mark as completed
-    if (!progress.completed) {
-      progress.completed = true;
-      progress.tier = tier;
-      progress.scannedQR = trimmedQR;
-      progress.scannedAt = new Date();
-      progress.scanCount = 1;
-
-      // Generate redemption QR code if not already generated
-      if (!user.redemptionQRCode) {
-        user.redemptionQRCode = await User.generateUniqueRedemptionQRCode();
+    // Check if this is the game start QR code
+    if (trimmedQR === 'PAYLATER_GAME_START') {
+      // Start the game
+      if (!progress.gameStarted) {
+        progress.gameStarted = true;
+        progress.scannedQR = trimmedQR;
+        progress.scannedAt = new Date();
+        progress.gameStartCount = 1;
+        
+        // Generate redemption QR code if not already generated
+        if (!user.redemptionQRCode) {
+          user.redemptionQRCode = await User.generateUniqueRedemptionQRCode();
+        }
+      } else {
+        // Game already started - allow re-scanning, increment count and update timestamp
+        progress.gameStartCount = (progress.gameStartCount || 0) + 1;
+        progress.scannedAt = new Date();
       }
     } else {
-      // Already scanned - just increment count
-      progress.scanCount = (progress.scanCount || 0) + 1;
+      // This is a tier QR code (TIER1 or TIER2)
+      let tier = null;
+      
+      if (trimmedQR === 'PAYLATER_GAME_TIER1') {
+        tier = 1;
+      } else if (trimmedQR === 'PAYLATER_GAME_TIER2') {
+        tier = 2;
+      } else {
+        return next(new AppError('Invalid QR code. Please scan the correct QR code for game activity.', 400));
+      }
+
+      // Check if game has been started
+      if (!progress.gameStarted) {
+        return next(new AppError('Please scan the game start QR code first.', 400));
+      }
+
+      // If first time scanning a tier QR, set tier and mark as completed
+      if (!progress.completed) {
+        progress.completed = true;
+        progress.tier = tier;
+        progress.scanCount = 1;
+        // Mark as redeemed when first tier QR is scanned
+        if (!user.isRedeemed) {
+          user.isRedeemed = true;
+          user.redeemedAt = new Date();
+        }
+      } else {
+        // Already scanned a tier - just increment count
+        progress.scanCount = (progress.scanCount || 0) + 1;
+      }
     }
   } else if (activityType === 'photo') {
     // For photo: validate QR code format (exact match required)
@@ -71,15 +95,17 @@ router.post('/', authMiddleware, asyncHandler(async (req, res, next) => {
       return next(new AppError('Invalid QR code. Please scan the correct QR code for photo activity.', 400));
     }
 
-    // Check if already scanned
-    if (progress.completed) {
-      return next(new AppError('Photo QR code already scanned', 400));
+    // Allow multiple scans - just increment count
+    if (!progress.completed) {
+      // First scan
+      progress.completed = true;
+      progress.scannedQR = trimmedQR;
+      progress.scannedAt = new Date();
+      progress.scanCount = 1;
+    } else {
+      // Subsequent scans - just increment count
+      progress.scanCount = (progress.scanCount || 0) + 1;
     }
-
-    // Mark as completed
-    progress.completed = true;
-    progress.scannedQR = trimmedQR;
-    progress.scannedAt = new Date();
 
     // Generate redemption QR code if not already generated
     if (!user.redemptionQRCode) {
@@ -122,7 +148,12 @@ router.post('/', authMiddleware, asyncHandler(async (req, res, next) => {
       qrCode: qrCode.trim(),
       scannedAt: progress.scannedAt,
       completed: progress.completed,
-      ...(activityType === 'game' && { tier: progress.tier, scanCount: progress.scanCount })
+      ...(activityType === 'game' && { 
+        gameStarted: progress.gameStarted,
+        tier: progress.tier, 
+        scanCount: progress.scanCount 
+      }),
+      ...(activityType === 'photo' && { scanCount: progress.scanCount })
     }
   });
 }));

@@ -1,116 +1,116 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { PayLaterAPI } from "../api";
-import QRCodeLib from "qrcode";
+import SimpleQRScanner from "./SimpleQRScanner";
 
 interface RedeemGiftPopupProps {
   onClose: () => void;
 }
 
 const RedeemGiftPopup: React.FC<RedeemGiftPopupProps> = ({ onClose }) => {
-  const [qrCode, setQRCode] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isScanning, setIsScanning] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadQRCode();
-  }, []);
-
-  useEffect(() => {
-    if (qrCode && canvasRef.current) {
-      QRCodeLib.toCanvas(
-        canvasRef.current,
-        qrCode,
-        {
-          width: 300,
-          margin: 4,
-          errorCorrectionLevel: 'H',
-          color: {
-            dark: "#000000",
-            light: "#FFFFFF",
-          },
-        },
-        (err) => {
-          if (err) {
-            console.error("Error generating QR code:", err);
-            setError("Failed to generate QR code");
-          }
-        }
-      );
+  const handleScanSuccess = async (scannedQRCode: string): Promise<{ success: boolean; message?: string }> => {
+    const trimmedQR = scannedQRCode.trim();
+    
+    // Validate that it's a tier QR code
+    if (trimmedQR !== 'PAYLATER_GAME_TIER1' && trimmedQR !== 'PAYLATER_GAME_TIER2') {
+      const errorMsg = "Invalid QR code. Please scan a tier QR code (TIER1 or TIER2).";
+      setError(errorMsg);
+      return { success: false, message: errorMsg };
     }
-  }, [qrCode]);
 
-  const loadQRCode = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      const response = await PayLaterAPI.getUserQRCode();
-      
-      if (response.success && response.data) {
-        setQRCode(response.data.redemptionQRCode);
+      setIsSubmitting(true);
+      setError("");
+
+      const response = await PayLaterAPI.scanQRCode(trimmedQR, 'game');
+
+      if (response.success) {
+        setIsScanning(false);
+        // Close popup after successful scan - keep it longer so user can see the success message
+        setTimeout(() => {
+          onClose();
+        }, 3500);
+        return { success: true };
       } else {
-        setError(response.error || "Failed to load QR code");
+        const errorMsg = response.error || "Unable to redeem. Please try again.";
+        setError(errorMsg);
+        return { success: false, message: errorMsg };
       }
-    } catch (error) {
-      setError("Failed to load QR code");
+    } catch {
+      const errorMsg = "Something went wrong. Please try again.";
+      setError(errorMsg);
+      return { success: false, message: errorMsg };
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
+  };
+
+  const handleCloseScanner = () => {
+    if (isSubmitting) return;
+    onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+      <div className="bg-[#1A1A1A] text-white rounded-2xl shadow-2xl w-full max-w-xl p-6 relative">
         <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
+          onClick={handleCloseScanner}
+          className="absolute top-4 right-4 text-gray-300 hover:text-white"
+          disabled={isSubmitting}
         >
           ✕
         </button>
 
-        <h2 className="text-2xl font-heading text-center text-gray-800 mb-4">
+        <h2 className="text-xl font-heading mb-2">
           Redeem Your Gift
         </h2>
-        
-        <p className="text-center text-gray-600 mb-6 text-sm">
-          Show this QR code to the admin to claim your reward.
+        <p className="text-sm text-gray-300 mb-4">
+          Scan a tier QR code (TIER1 or TIER2) to redeem your gift.
         </p>
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
-            <p className="text-gray-600">Loading QR code...</p>
+        {error && (
+          <div className="bg-red-500/90 text-white border border-red-300 rounded-lg p-3 mb-4 text-sm">
+            {error}
           </div>
-        ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-red-600 mb-4">{error}</p>
-            <button
-              onClick={loadQRCode}
-              className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : qrCode ? (
-          <div className="flex flex-col items-center">
-            <div className="bg-white p-4 rounded-lg border-2 border-purple-600 mb-4">
-              <canvas ref={canvasRef} />
-            </div>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-2 w-full">
-              <p className="text-xs text-yellow-800 text-center font-semibold">
-                ⚠️ This is a one-time gift redeem. You can only redeem once.
-              </p>
-            </div>
-          </div>
-        ) : null}
+        )}
 
-        <button
-          onClick={onClose}
-          className="w-full mt-6 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors font-body"
-        >
-          Close
-        </button>
+        {isScanning && (
+          <SimpleQRScanner
+            title=""
+            expectedQRCode=""
+            onScan={handleScanSuccess}
+            onClose={handleCloseScanner}
+          />
+        )}
+
+        {!isScanning && !error && (
+          <div className="text-center py-8">
+            <div className="w-20 h-20 rounded-full bg-[#14B8A6] flex items-center justify-center mb-4 mx-auto">
+              <svg
+                className="w-12 h-12 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-heading text-white mb-2">
+              Gift Redeemed!
+            </h3>
+            <p className="text-gray-300">
+              Your gift has been successfully redeemed.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

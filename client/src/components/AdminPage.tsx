@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Search, LogOut, QrCode } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PayLaterAPI } from "../api";
 import AdminLogin from "./AdminLogin";
-import SimpleQRScanner from "./SimpleQRScanner";
+import QRCodeLib from "qrcode";
 
 interface AdminUser {
   _id: string;
@@ -11,12 +11,15 @@ interface AdminUser {
   name: string;
   gameProgress: {
     game?: {
+      gameStarted?: boolean;
       completed: boolean;
       tier?: number;
       scanCount?: number;
+      gameStartCount?: number;
     };
     photo?: {
       completed: boolean;
+      scanCount?: number;
     };
   };
   redemptionQRCode?: string;
@@ -49,8 +52,8 @@ const AdminPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   const [statistics, setStatistics] = useState<AdminStatistics | null>(null);
-  const [showQRScanner, setShowQRScanner] = useState(false);
-  const [qrScanMessage, setQRScanMessage] = useState("");
+  const [showQRCode, setShowQRCode] = useState(false);
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     checkAuthentication();
@@ -62,6 +65,39 @@ const AdminPage: React.FC = () => {
       Promise.all([loadUsers(1, ""), loadStatistics()]).finally(() => setIsLoading(false));
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (showQRCode) {
+      // Small delay to ensure canvas is rendered
+      const timer = setTimeout(() => {
+        if (qrCanvasRef.current) {
+          // Generate QR code for the URL when modal opens
+          QRCodeLib.toCanvas(
+            qrCanvasRef.current,
+            "https://paylater-marathon.online/",
+            {
+              width: 300,
+              margin: 4,
+              errorCorrectionLevel: 'H',
+              color: {
+                dark: "#000000",
+                light: "#FFFFFF",
+              },
+            },
+            (err) => {
+              if (err) {
+                console.error("Error generating QR code:", err);
+              } else {
+                console.log("QR code generated successfully");
+              }
+            }
+          );
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showQRCode]);
 
   const checkAuthentication = () => {
     const authenticated = localStorage.getItem("adminAuthenticated") === "true";
@@ -119,33 +155,38 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const handleScanQR = async (qrData: string): Promise<{ success: boolean; message?: string }> => {
-    try {
-      const response = await PayLaterAPI.adminScanQR(qrData);
-      
-      if (response.success) {
-        const userName = response.data?.name || response.data?.phoneNumber || "User";
-        const successMsg = `✅ Gift redeemed for ${userName}!`;
-        setQRScanMessage(successMsg);
-        
-        setShowQRScanner(false);
-        loadUsers(currentPage, searchTerm);
-        loadStatistics();
-        
-        setTimeout(() => setQRScanMessage(""), 5000);
-        
-        return { success: true };
-      } else {
-        const errorMsg = `❌ ${response.error || "Invalid QR code"}`;
-        return { success: false, message: errorMsg };
-      }
-    } catch {
-      return { success: false, message: "❌ Error processing QR code scan" };
-    }
+  const handleShowQRCode = () => {
+    setShowQRCode(true);
   };
 
-  const handleCloseQRScanner = () => {
-    setShowQRScanner(false);
+  useEffect(() => {
+    if (showQRCode && qrCanvasRef.current) {
+      // Generate QR code for the URL when modal opens
+      QRCodeLib.toCanvas(
+        qrCanvasRef.current,
+        "https://paylater-marathon.online/",
+        {
+          width: 300,
+          margin: 4,
+          errorCorrectionLevel: 'H',
+          color: {
+            dark: "#000000",
+            light: "#FFFFFF",
+          },
+        },
+        (err) => {
+          if (err) {
+            console.error("Error generating QR code:", err);
+          } else {
+            console.log("QR code generated successfully");
+          }
+        }
+      );
+    }
+  }, [showQRCode]);
+
+  const handleCloseQRCode = () => {
+    setShowQRCode(false);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -182,11 +223,11 @@ const AdminPage: React.FC = () => {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setShowQRScanner(true)}
+              onClick={handleShowQRCode}
               className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-body shadow-lg"
             >
               <QrCode className="w-4 h-4" />
-              Scan QR Code
+              Show QR Code
             </button>
             <button
               onClick={handleLogout}
@@ -199,18 +240,6 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
 
-      {/* QR Scan Message */}
-      {qrScanMessage && (
-        <div
-          className={`mb-4 sm:mb-6 p-4 rounded-xl text-center font-body shadow-lg ${
-            qrScanMessage.includes("✅") 
-              ? "bg-green-100 text-green-800 border-2 border-green-300" 
-              : "bg-red-100 text-red-800 border-2 border-red-300"
-          }`}
-        >
-          <p className="text-lg font-bold">{qrScanMessage}</p>
-        </div>
-      )}
 
       {/* Statistics Cards */}
       {statistics && (
@@ -224,7 +253,7 @@ const AdminPage: React.FC = () => {
             <p className="text-2xl font-bold text-green-600">{statistics.redeemedUsers}</p>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-4">
-            <p className="text-sm text-gray-600 mb-1">Game Completed</p>
+            <p className="text-sm text-gray-600 mb-1">Game Started</p>
             <p className="text-2xl font-bold text-blue-600">{statistics.gameCompleted}</p>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-4">
@@ -282,9 +311,9 @@ const AdminPage: React.FC = () => {
                     <td className="py-3 px-4 text-sm font-body">{user.name}</td>
                     <td className="py-3 px-4 text-sm font-body">{user.phoneNumber}</td>
                     <td className="py-3 px-3 text-center">
-                      {user.gameProgress?.game?.completed ? (
+                      {user.gameProgress?.game?.gameStarted ? (
                         <span className="text-green-600 font-semibold">
-                          {user.gameProgress.game.scanCount || 1}
+                          {user.gameProgress.game.gameStartCount || 1}
                         </span>
                       ) : (
                         <span className="text-gray-400">-</span>
@@ -292,7 +321,9 @@ const AdminPage: React.FC = () => {
                     </td>
                     <td className="py-3 px-3 text-center">
                       {user.gameProgress?.photo?.completed ? (
-                        <span className="text-green-600 font-semibold">✓</span>
+                        <span className="text-green-600 font-semibold">
+                          {user.gameProgress.photo.scanCount || 1}
+                        </span>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
@@ -342,30 +373,29 @@ const AdminPage: React.FC = () => {
         )}
       </div>
 
-      {/* QR Scanner Modal */}
-      {showQRScanner && (
+      {/* QR Code Display Modal */}
+      {showQRCode && (
         <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
             <button
-              onClick={handleCloseQRScanner}
+              onClick={handleCloseQRCode}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
             >
               ✕
             </button>
 
-            <h3 className="text-xl font-heading mb-2 text-gray-800">
-              Scan User's Redemption QR Code
+            <h3 className="text-xl font-heading mb-2 text-gray-800 text-center">
+              Event QR Code
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Scan the QR code shown by the user to mark their gift as redeemed.
+            <p className="text-sm text-gray-600 mb-4 text-center">
+              https://paylater-marathon.online/
             </p>
 
-            <SimpleQRScanner
-              title=""
-              expectedQRCode=""
-              onScan={handleScanQR}
-              onClose={handleCloseQRScanner}
-            />
+            <div className="flex flex-col items-center">
+              <div className="bg-white p-4 rounded-lg border-2 border-purple-600 mb-4">
+                <canvas ref={qrCanvasRef} />
+              </div>
+            </div>
           </div>
         </div>
       )}
