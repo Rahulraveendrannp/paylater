@@ -37,6 +37,8 @@ interface AdminStatistics {
   bothCompleted: number;
   tier1Count: number;
   tier2Count: number;
+  tier1Redeemed: number;
+  tier2Redeemed: number;
 }
 
 const ITEMS_PER_PAGE = 25;
@@ -243,7 +245,7 @@ const AdminPage: React.FC = () => {
 
       {/* Statistics Cards */}
       {statistics && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           <div className="bg-white rounded-xl shadow-lg p-4">
             <p className="text-sm text-gray-600 mb-1">Total Users</p>
             <p className="text-2xl font-bold text-purple-600">{statistics.totalUsers}</p>
@@ -259,6 +261,14 @@ const AdminPage: React.FC = () => {
           <div className="bg-white rounded-xl shadow-lg p-4">
             <p className="text-sm text-gray-600 mb-1">Photo Completed</p>
             <p className="text-2xl font-bold text-pink-600">{statistics.photoCompleted}</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-4">
+            <p className="text-sm text-gray-600 mb-1">Gifts Redeemed - Tier 1</p>
+            <p className="text-2xl font-bold text-orange-600">{statistics.tier1Redeemed || 0}</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-4">
+            <p className="text-sm text-gray-600 mb-1">Gifts Redeemed - Tier 2</p>
+            <p className="text-2xl font-bold text-cyan-600">{statistics.tier2Redeemed || 0}</p>
           </div>
         </div>
       )}

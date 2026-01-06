@@ -142,6 +142,24 @@ router.get('/statistics', asyncHandler(async (req, res, next) => {
   const tier1Count = await User.countDocuments({ 'gameProgress.game.tier': 1 });
   const tier2Count = await User.countDocuments({ 'gameProgress.game.tier': 2 });
 
+  // Redeemed gifts by tier
+  // Find all redeemed users and count by tier
+  const redeemedUsersWithTier = await User.find({ isRedeemed: true })
+    .select('gameProgress.game.tier')
+    .lean();
+  
+  let tier1Redeemed = 0;
+  let tier2Redeemed = 0;
+  
+  redeemedUsersWithTier.forEach(user => {
+    const tier = user.gameProgress?.game?.tier;
+    if (tier === 1) {
+      tier1Redeemed++;
+    } else if (tier === 2) {
+      tier2Redeemed++;
+    }
+  });
+
   res.status(200).json({
     success: true,
     data: {
@@ -152,7 +170,9 @@ router.get('/statistics', asyncHandler(async (req, res, next) => {
       photoCompleted,
       bothCompleted,
       tier1Count,
-      tier2Count
+      tier2Count,
+      tier1Redeemed,
+      tier2Redeemed
     }
   });
 }));
