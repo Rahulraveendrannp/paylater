@@ -4,7 +4,7 @@ import type { ApiResponse } from "./types";
 
 const API_BASE =
   (import.meta as any).env?.VITE_API_BASE ||
-  "http://localhost:5000/api";
+  "https://paylater-be-657638641053.us-central1.run.app/api";
 
 function setToken(token: string) {
   localStorage.setItem("paylater_token", token);
