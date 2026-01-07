@@ -111,7 +111,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
         {/* Name input - Label inside left section */}
         <div className="w-full">
           <div className="flex bg-white rounded-lg overflow-hidden">
-            <div className="w-[140px] px-2 py-3 bg-white border-r border-gray-300 text-[#4A148C] font-semibold flex items-center">
+            <div className="w-[80px] md:w-[140px] px-2 py-3 bg-white border-r border-gray-300 text-[#4A148C] font-semibold flex items-center text-sm md:text-base">
               Name
             </div>
             <input
@@ -121,7 +121,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
                 setName(e.target.value);
                 if (error) setError("");
               }}
-              className="flex-1 px-4 py-3 bg-white text-gray-800 focus:outline-none font-semibold"
+              className="flex-1 px-3 md:px-4 py-3 bg-white text-gray-800 focus:outline-none font-semibold text-sm md:text-base"
               placeholder=""
               disabled={isLoading}
             />
@@ -131,14 +131,14 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
         {/* Phone input - Country code in left section */}
         <div className="w-full">
           <div className="flex bg-white rounded-lg overflow-hidden">
-            <div className="w-[140px] relative px-1 py-3 bg-white border-r border-gray-300 text-[#4A148C] font-body flex items-center">
+            <div className="w-[80px] md:w-[140px] relative px-1 py-3 bg-white border-r border-gray-300 text-[#4A148C] font-body flex items-center">
               <select
                 value={countryCode}
                 onChange={(e) => {
                   setCountryCode(e.target.value);
                   if (error) setError("");
                 }}
-                className="text-[#4A148C]  focus:outline-none cursor-pointer appearance-none pr-6 bg-transparent w-full"
+                className="text-[#4A148C] focus:outline-none cursor-pointer appearance-none pr-4 md:pr-6 bg-transparent w-full text-sm md:text-base"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234A148C' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
@@ -161,7 +161,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
                 setLocalPhone(val);
                 if (error) setError("");
               }}
-              className="flex-1 px-4 py-3 bg-white text-gray-800 focus:outline-none font-semibold"
+              className="flex-1 px-3 md:px-4 py-3 bg-white text-gray-800 focus:outline-none font-semibold text-sm md:text-base"
               placeholder=""
               disabled={isLoading}
               maxLength={15}
@@ -180,7 +180,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
       <button
         onClick={handleSubmit}
         disabled={isLoading || localPhone.length < 7 || !name.trim()}
-        className="w-[90%] mb-8 py-2 rounded-xl bg-[#14B8A6] text-white text-lg font-body font-semibold shadow-lg hover:bg-[#0D9488] disabled:opacity-60 disabled:cursor-not-allowed transition"
+        className="w-[90%] mb-8 py-2 rounded-xl bg-[#61C9D6] text-white text-lg font-body font-semibold shadow-lg hover:bg-[#0D9488] disabled:opacity-60 disabled:cursor-not-allowed transition"
       >
         {isLoading ? "Registering..." : "Let's Go"}
       </button>

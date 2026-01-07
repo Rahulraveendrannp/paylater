@@ -34,7 +34,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       {/* CTA Button - 90% width */}
       <button
         onClick={onStart}
-        className="w-[90%] bg-[#14B8A6] text-white py-2 rounded-xl text-xl font-body font-semibold hover:bg-[#0D9488] transition-colors shadow-lg mb-8"
+        className="w-[90%] bg-[#61C9D6] text-white py-2 rounded-xl text-xl font-body font-semibold hover:bg-[#4FB8C6] transition-colors shadow-lg mb-8"
       >
         Let&apos;s Get Started
       </button>

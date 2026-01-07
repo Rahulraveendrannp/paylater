@@ -30,7 +30,7 @@ const ACTIVITIES: ActivityCard[] = [
   },
 ];
 
-const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
+const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
   const [selectedActivity, setSelectedActivity] = useState<ActivityCard | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -193,17 +193,39 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     <div 
       className="min-h-screen flex flex-col items-center p-4 font-body"
       style={{
-        background: 'radial-gradient(circle at center, #4D3AAA 0%, #1F1744 100%)'
+        background: `
+          radial-gradient(ellipse 400px 200px at 50% 15%, rgba(107, 90, 205, 0.3) 0%, transparent 70%),
+          radial-gradient(circle 250px at 35% 45%, rgba(107, 90, 205, 0.25) 0%, transparent 70%),
+          radial-gradient(circle 250px at 65% 45%, rgba(107, 90, 205, 0.25) 0%, transparent 70%),
+          radial-gradient(circle at center, #4D3AAA 0%, #1F1744 100%)
+        `
       }}
     >
       {/* Header */}
       <div className="text-center mb-8 mt-12">
-        <img
-          src="/hellojawz.svg"
-          alt="HELLO JAWS"
-          className="w-full max-w-[160px] md:max-w-[180px] mx-auto mb-4"
-        />
-        <p className="text-gray-200 text-base md:text-lg mt-4 text-center w-[80%] mx-auto font-normal">
+        <div className="flex flex-col items-center mb-4">
+          {/* HELLO SVG */}
+          <img
+            src="/Hello.svg"
+            alt="HELLO"
+            className="w-full max-w-[130px] md:max-w-[180px] z-50"
+          />
+          {/* Dynamic Username styled to match */}
+          <h1 
+            className="font-heading font-black uppercase leading-none mt-[-12px]"
+            style={{
+              fontFamily: "'Aspekta', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+              fontSize: 'clamp(2.8rem, 7vw, 3.2rem)',
+              color: '#EDEDF7',
+              WebkitTextStroke: '16px #291F5B',              
+              letterSpacing: '0.05em',
+              paintOrder: 'stroke fill',
+            }}
+          >
+            {name.toUpperCase()}
+          </h1>
+        </div>
+        <p className="text-gray-200 text-base md:text-lg mt-8 text-center w-[80%] mx-auto font-extralight">
           Scan the QR code to start the activity of your choice.
         </p>
       </div>
@@ -235,7 +257,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           return (
             <div
               key={activity.id}
-              className={`bg-purple-100 rounded-xl shadow-lg p-6 flex flex-col transition-shadow ${
+              className={`bg-purple-100 rounded-xl shadow-lg p-3 flex flex-col transition-shadow ${
                 canClick ? 'cursor-pointer hover:shadow-xl' : 'cursor-not-allowed opacity-75'
               }`}
               style={{ backgroundColor: '#E8E0F5' }}
@@ -306,7 +328,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       {/* Logout button */}
       <button
         onClick={onLogout}
-        className="w-[90%] bg-[#14B8A6] text-white py-2 rounded-xl text-lg font-body shadow-lg hover:bg-[#0D9488] transition-colors mt-12 mb-8"
+        className="w-[90%] bg-[#61C9D6] text-white py-2 rounded-xl text-lg font-body shadow-lg hover:bg-[#4FB8C6] transition-colors mt-12 mb-8"
       >
         Logout
       </button>
