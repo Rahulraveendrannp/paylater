@@ -259,7 +259,7 @@ const AdminPage: React.FC = () => {
             <p className="text-2xl font-bold text-blue-600">{statistics.gameCompleted}</p>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-4">
-            <p className="text-sm text-gray-600 mb-1">Photo Completed</p>
+            <p className="text-sm text-gray-600 mb-1">Photo Scans</p>
             <p className="text-2xl font-bold text-pink-600">{statistics.photoCompleted}</p>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-4">

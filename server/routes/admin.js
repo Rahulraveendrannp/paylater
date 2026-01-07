@@ -132,7 +132,12 @@ router.get('/statistics', asyncHandler(async (req, res, next) => {
     return total + (user.gameProgress?.game?.gameStartCount || 1);
   }, 0);
   
-  const photoCompleted = await User.countDocuments({ 'gameProgress.photo.completed': true });
+  // Calculate total photo scans (sum of all photo scanCount values)
+  const usersWithPhotoCompleted = await User.find({ 'gameProgress.photo.completed': true })
+    .select('gameProgress.photo.scanCount');
+  const photoCompleted = usersWithPhotoCompleted.reduce((total, user) => {
+    return total + (user.gameProgress?.photo?.scanCount || 1);
+  }, 0);
   const bothCompleted = await User.countDocuments({
     'gameProgress.game.completed': true,
     'gameProgress.photo.completed': true
