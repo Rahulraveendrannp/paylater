@@ -211,19 +211,34 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
             className="w-full max-w-[130px] md:max-w-[180px] z-50"
           />
           {/* Dynamic Username styled to match */}
-          <h1 
-            className="font-heading font-black uppercase leading-none mt-[-12px]"
+          <svg 
+            className="mt-[-14px]"
+            viewBox="0 0 400 80" 
             style={{
-              fontFamily: "'Aspekta', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
-              fontSize: 'clamp(2.8rem, 7vw, 3.2rem)',
-              color: '#EDEDF7',
-              WebkitTextStroke: '16px #291F5B',              
-              letterSpacing: '0.05em',
-              paintOrder: 'stroke fill',
+              width: 'clamp(280px, 70vw, 400px)',
+              height: 'auto',
             }}
           >
-            {name.toUpperCase()}
-          </h1>
+            <text
+              x="50%"
+              y="60"
+              textAnchor="middle"
+              style={{
+                fontFamily: "'Aspekta', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+                fontSize: '60px',
+                fontWeight: 900,
+                letterSpacing: '0.05em',
+                fill: '#EDEDF7',
+                stroke: '#291F5B',
+                strokeWidth: '16px',
+                strokeLinejoin: 'round',
+                strokeLinecap: 'round',
+                paintOrder: 'stroke fill',
+              }}
+            >
+              {name.toUpperCase()}
+            </text>
+          </svg>
         </div>
         <p className="text-gray-200 text-base md:text-lg mt-8 text-center w-[80%] mx-auto font-extralight">
           Scan the QR code to start the activity of your choice.
