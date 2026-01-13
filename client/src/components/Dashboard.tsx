@@ -111,11 +111,16 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
       // In redeem mode, only allow tier QR codes
       validQRCodes = ['PAYLATER_GAME_TIER1', 'PAYLATER_GAME_TIER2'];
     } else if (selectedActivity.type === 'game') {
-      // Check if game has been started
+      // Check if game has been started and redeemed
       const gameStarted = gameProgress?.game?.gameStarted || false;
-      if (gameStarted) {
-        // After game started, allow tier QR codes
-        validQRCodes = ['PAYLATER_GAME_TIER1', 'PAYLATER_GAME_TIER2'];
+      const isRedeemed = gameProgress?.isRedeemed || false;
+      
+      if (isRedeemed) {
+        // After redemption, only allow START QR to play game multiple times
+        validQRCodes = ['PAYLATER_GAME_START'];
+      } else if (gameStarted) {
+        // After game started but before redemption, allow START QR (to play again) and TIER QR (to redeem)
+        validQRCodes = ['PAYLATER_GAME_START', 'PAYLATER_GAME_TIER1', 'PAYLATER_GAME_TIER2'];
       } else {
         // Before game started, only allow start QR code
         validQRCodes = ['PAYLATER_GAME_START'];
@@ -148,8 +153,16 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
           setSuccessMessage("Gift Redeemed!");
         } else if (selectedActivity.type === 'game') {
           const gameStarted = gameProgress?.game?.gameStarted || false;
-          if (!gameStarted && trimmedQR === 'PAYLATER_GAME_START') {
-            setSuccessMessage("You can start the game now!");
+          const isRedeemed = gameProgress?.isRedeemed || false;
+          
+          if (trimmedQR === 'PAYLATER_GAME_START') {
+            if (isRedeemed) {
+              setSuccessMessage("Game started! Enjoy playing again!");
+            } else if (!gameStarted) {
+              setSuccessMessage("Game started!");
+            } else {
+              setSuccessMessage("Game started!");
+            }
           } else if (trimmedQR === 'PAYLATER_GAME_TIER1' || trimmedQR === 'PAYLATER_GAME_TIER2') {
             setSuccessMessage("Gift Redeemed!");
           } else {
@@ -158,10 +171,10 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
         } else {
           setSuccessMessage("Scan successful!");
         }
-        // Auto-dismiss success message after 3 seconds
+        // Auto-dismiss success message after 2 seconds
         setTimeout(() => {
           setSuccessMessage("");
-        }, 3000);
+        }, 2000);
         // Reload progress to update UI
         await loadProgress();
         return { success: true };
