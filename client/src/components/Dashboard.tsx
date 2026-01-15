@@ -51,6 +51,20 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
   const [isRedeemMode, setIsRedeemMode] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
 
+  // Process name: extract first name and truncate if too long
+  const getDisplayName = (fullName: string): string => {
+    // Split by space and get first name
+    const firstName = fullName.trim().split(/\s+/)[0] || fullName;
+    
+    // Truncate if longer than 15 characters and add ellipsis
+    const maxLength = 8;
+    if (firstName.length > maxLength) {
+      return firstName.substring(0, maxLength) + '...';
+    }
+    
+    return firstName;
+  };
+
   useEffect(() => {
     loadProgress();
     
@@ -228,7 +242,8 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
             className="mt-[-14px]"
             viewBox="0 0 400 80" 
             style={{
-              width: 'clamp(280px, 70vw, 400px)',
+              width: '100%',
+              maxWidth: '95vw',
               height: 'auto',
             }}
           >
@@ -249,7 +264,7 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
                 paintOrder: 'stroke fill',
               }}
             >
-              {name.toUpperCase()}
+              {getDisplayName(name).toUpperCase()}
             </text>
           </svg>
         </div>
