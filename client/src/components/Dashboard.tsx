@@ -303,7 +303,7 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
       {/* Logout button - at bottom */}
       <button
         onClick={onLogout}
-        className="w-[90%] bg-[#61C9D6] text-white py-2 rounded-xl text-lg font-body shadow-lg hover:bg-[#4FB8C6] transition-colors mb-20 mt-auto"
+        className="w-[90%] bg-[#61C9D6] text-white py-3 rounded-xl text-lg font-body font-bold shadow-lg hover:bg-[#4FB8C6] transition-colors mb-20 mt-auto"
       >
         Logout
       </button>

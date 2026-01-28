@@ -28,7 +28,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       {/* Main Title - Smart Slasher SVG */}
       <div className="text-center mb-2 flex-1 flex items-center justify-center">
         <img
-          src="/smart slasher.svg"
+          src="/smartslasher.png"
           alt="Smart Slasher"
           className="w-full max-w-md md:max-w-lg mx-auto"
         />
@@ -37,7 +37,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       {/* CTA Button - 90% width */}
       <button
         onClick={onStart}
-        className="w-[90%] bg-[#61C9D6] text-white py-2 rounded-xl text-xl font-body font-semibold hover:bg-[#4FB8C6] transition-colors shadow-lg mb-8"
+        className="w-[90%] bg-[#61C9D6] text-white py-3 rounded-xl text-xl font-body font-bold hover:bg-[#4FB8C6] transition-colors shadow-lg mb-8"
       >
         Let&apos;s Get Started
       </button>

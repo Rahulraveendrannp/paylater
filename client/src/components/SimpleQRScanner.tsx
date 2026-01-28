@@ -477,7 +477,8 @@ const SimpleQRScanner: React.FC<SimpleQRScannerProps> = ({
               aspectRatio: "3/4",
               maxWidth: isMobile ? "100%" : "100%",
               width: "100%",
-              minHeight: "400px"
+              minHeight: "400px",
+              position: "relative"
             }}
           >
             <video
@@ -487,7 +488,12 @@ const SimpleQRScanner: React.FC<SimpleQRScannerProps> = ({
               muted
               style={{
                 display: isCameraReady ? "block" : "none",
-                position: "relative",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
                 zIndex: 1,
               }}
             />
