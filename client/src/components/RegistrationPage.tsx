@@ -110,7 +110,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
         {/* Name input - Label inside left section */}
         <div className="w-full">
           <div className="flex bg-white rounded-xl overflow-hidden">
-            <div className="w-[80px] md:w-[140px] px-2 py-3 bg-white border-r border-gray-300 text-[#4A148C] font-semibold flex items-center justify-center text-sm md:text-base">
+            <div className="w-[80px] md:w-[140px] px-2 py-3 bg-white border-r border-gray-300 text-[#5933EB] font-semibold flex items-center justify-center text-sm md:text-base">
               Name
             </div>
             <input
@@ -130,16 +130,16 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
         {/* Phone input - Country code in left section */}
         <div className="w-full">
           <div className="flex bg-white rounded-xl overflow-hidden">
-            <div className="w-[80px] md:w-[140px] relative px-1 py-3 bg-white border-r border-gray-300 text-[#4A148C] font-body flex items-center justify-center">
+            <div className="w-[80px] md:w-[140px] relative px-1 py-3 bg-white border-r border-gray-300 text-[#5933EB] font-body flex items-center justify-center">
               <select
                 value={countryCode}
                 onChange={(e) => {
                   setCountryCode(e.target.value);
                   if (error) setError("");
                 }}
-                className="text-[#4A148C] focus:outline-none cursor-pointer appearance-none pr-4 md:pr-6 bg-transparent w-full text-sm md:text-base text-center"
+                className="text-[#5933EB] focus:outline-none cursor-pointer appearance-none pr-4 md:pr-6 bg-transparent w-full text-sm md:text-base text-center"
                 style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234A148C' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2361C9D6' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 0.5rem center',
                   textAlign: 'center',
