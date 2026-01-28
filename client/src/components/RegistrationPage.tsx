@@ -91,7 +91,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center p-4 font-body"
+      className="h-screen flex flex-col items-center p-4 font-body overflow-hidden"
       style={{
         background: 'radial-gradient(circle at center, #4D3AAA 0%, #1F1744 100%)'
       }}

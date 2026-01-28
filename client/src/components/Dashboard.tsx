@@ -149,7 +149,7 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center p-4 font-body"
+      className="h-screen flex flex-col items-center p-4 font-body overflow-hidden"
       style={{
         background: `
           radial-gradient(ellipse 400px 200px at 50% 15%, rgba(107, 90, 205, 0.3) 0%, transparent 70%),

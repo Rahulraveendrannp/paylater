@@ -7,7 +7,7 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   return (
     <div 
-      className="min-h-screen flex flex-col items-center p-4 font-body relative"
+      className="h-screen flex flex-col items-center p-4 font-body relative overflow-hidden"
       style={{
         backgroundImage: 'url(/bg.svg)',
         backgroundSize: 'cover',
