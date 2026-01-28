@@ -10,7 +10,7 @@ interface DashboardProps {
 
 interface ActivityCard {
   id: string;
-  type: "game" | "photo";
+  type: "game";
   title: string;
   description: string;
 }
@@ -19,14 +19,8 @@ const ACTIVITIES: ActivityCard[] = [
   {
     id: "game",
     type: "game",
-    title: "Finish Line Frenzy",
-    description: "Scan the QR code to start the game activity",
-  },
-  {
-    id: "photo",
-    type: "photo",
-    title: "Your Marathon Moment",
-    description: "Scan the QR code to start the photo activity",
+    title: "Redeem Gift",
+    description: "Scan the QR code to redeem the gift",
   },
 ];
 
@@ -36,19 +30,8 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [gameProgress, setGameProgress] = useState<{
-    game?: {
-      gameStarted?: boolean;
-      completed: boolean;
-      tier?: number;
-      scanCount?: number;
-    };
-    photo?: {
-      completed: boolean;
-      scanCount?: number;
-    };
     isRedeemed?: boolean;
   } | null>(null);
-  const [isRedeemMode, setIsRedeemMode] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
 
   // Process name: extract first name and truncate if too long
@@ -95,21 +78,14 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
     if (isSubmitting) {
       return;
     }
+    // Check if already redeemed - don't allow opening scanner
+    const isRedeemed = gameProgress?.isRedeemed || false;
+    if (isRedeemed) {
+      return;
+    }
     setSelectedActivity(activity);
     setShowScanner(true);
     setErrorMessage("");
-    setIsRedeemMode(false);
-  };
-
-  const handleOpenRedeemScanner = () => {
-    if (isSubmitting) {
-      return;
-    }
-    // Create a temporary activity for redeem mode
-    setSelectedActivity({ id: "redeem", type: "game", title: "Redeem Gift", description: "Scan a tier QR code to redeem your gift" });
-    setShowScanner(true);
-    setErrorMessage("");
-    setIsRedeemMode(true);
   };
 
   const handleScanSuccess = async (scannedQRCode: string): Promise<{ success: boolean; message?: string }> => {
@@ -117,37 +93,17 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
       return { success: false, message: "No activity selected" };
     }
 
-    // Validate QR code on frontend before sending to backend
-    const trimmedQR = scannedQRCode.trim();
-    let validQRCodes: string[] = [];
-
-    if (isRedeemMode) {
-      // In redeem mode, only allow tier QR codes
-      validQRCodes = ['PAYLATER_GAME_TIER1', 'PAYLATER_GAME_TIER2'];
-    } else if (selectedActivity.type === 'game') {
-      // Check if game has been started and redeemed
-      const gameStarted = gameProgress?.game?.gameStarted || false;
-      const isRedeemed = gameProgress?.isRedeemed || false;
-      
-      if (isRedeemed) {
-        // After redemption, only allow START QR to play game multiple times
-        validQRCodes = ['PAYLATER_GAME_START'];
-      } else if (gameStarted) {
-        // After game started but before redemption, allow START QR (to play again) and TIER QR (to redeem)
-        validQRCodes = ['PAYLATER_GAME_START', 'PAYLATER_GAME_TIER1', 'PAYLATER_GAME_TIER2'];
-      } else {
-        // Before game started, only allow start QR code
-        validQRCodes = ['PAYLATER_GAME_START'];
-      }
-    } else if (selectedActivity.type === 'photo') {
-      validQRCodes = ['PAYLATER_PHOTO'];
+    // Check if already redeemed
+    const isRedeemed = gameProgress?.isRedeemed || false;
+    if (isRedeemed) {
+      setErrorMessage("You have already redeemed your gift.");
+      return { success: false, message: "You have already redeemed your gift." };
     }
 
-    // Check if scanned QR code matches any valid code
-    if (!validQRCodes.includes(trimmedQR)) {
-      const errorMsg = isRedeemMode 
-        ? "Invalid QR code. Please scan a tier QR code (TIER1 or TIER2)."
-        : "Invalid QR code. Please scan the correct QR code for this activity.";
+    // Validate QR code - only accept TIER1
+    const trimmedQR = scannedQRCode.trim();
+    if (trimmedQR !== 'PAYLATER_GAME_TIER1') {
+      const errorMsg = "Invalid QR code. Please scan the correct QR code.";
       setErrorMessage(errorMsg);
       return { success: false, message: errorMsg };
     }
@@ -161,30 +117,7 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
       if (response.success) {
         setShowScanner(false);
         setSelectedActivity(null);
-        setIsRedeemMode(false);
-        // Show activity-specific success message
-        if (isRedeemMode) {
-          setSuccessMessage("Gift Redeemed!");
-        } else if (selectedActivity.type === 'game') {
-          const gameStarted = gameProgress?.game?.gameStarted || false;
-          const isRedeemed = gameProgress?.isRedeemed || false;
-          
-          if (trimmedQR === 'PAYLATER_GAME_START') {
-            if (isRedeemed) {
-              setSuccessMessage("Game started! Enjoy playing again!");
-            } else if (!gameStarted) {
-              setSuccessMessage("Game started!");
-            } else {
-              setSuccessMessage("Game started!");
-            }
-          } else if (trimmedQR === 'PAYLATER_GAME_TIER1' || trimmedQR === 'PAYLATER_GAME_TIER2') {
-            setSuccessMessage("Gift Redeemed!");
-          } else {
-            setSuccessMessage("Scan successful! You can play the game again.");
-          }
-        } else {
-          setSuccessMessage("Scan successful!");
-        }
+        setSuccessMessage("Gift redeemed successfully!");
         // Auto-dismiss success message after 2 seconds
         setTimeout(() => {
           setSuccessMessage("");
@@ -193,14 +126,13 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
         await loadProgress();
         return { success: true };
       } else {
-        // Check both error and message fields (backend returns message)
-        const errorMsg = response.error || response.message || "Unable to record this scan. Please try again.";
+        const errorMsg = response.error || response.message || "Unable to redeem. Please try again.";
         console.error("Scan error:", response);
         setErrorMessage(errorMsg);
         return { success: false, message: errorMsg };
       }
     } catch {
-      const errorMsg = "Something went wrong while saving your scan. Please try again.";
+      const errorMsg = "Something went wrong. Please try again.";
       setErrorMessage(errorMsg);
       return { success: false, message: errorMsg };
     } finally {
@@ -213,7 +145,6 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
     setShowScanner(false);
     setSelectedActivity(null);
     setErrorMessage("");
-    setIsRedeemMode(false);
   };
 
   return (
@@ -228,153 +159,155 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
         `
       }}
     >
+      <div className="flex flex-col items-center w-full flex-1 justify-between">
       {/* Header */}
       <div className="text-center mb-8 mt-12">
         <div className="flex flex-col items-center mb-4">
-          {/* HELLO SVG */}
-          <img
-            src="/Hello.svg"
-            alt="HELLO"
-            className="w-full max-w-[130px] md:max-w-[180px] z-50"
-          />
-          {/* Dynamic Username styled to match */}
-          <svg 
-            className="mt-[-14px]"
-            viewBox="0 0 400 80" 
-            style={{
-              width: '100%',
-              maxWidth: '95vw',
-              height: 'auto',
-            }}
-          >
-            <text
-              x="50%"
-              y="60"
-              textAnchor="middle"
+          {/* Hello and Username with embossed text styling */}
+          <div className="flex flex-col items-center">
+            {/* Hello text */}
+            <svg 
+              viewBox="0 0 400 80" 
               style={{
-                fontFamily: "'Aspekta', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
-                fontSize: '60px',
-                fontWeight: 900,
-                letterSpacing: '0.05em',
-                fill: '#EDEDF7',
-                stroke: '#291F5B',
-                strokeWidth: '16px',
-                strokeLinejoin: 'round',
-                strokeLinecap: 'round',
-                paintOrder: 'stroke fill',
+                width: '100%',
+                maxWidth: '95vw',
+                height: 'auto',
+                marginBottom: '0',
               }}
             >
-              {getDisplayName(name).toUpperCase()}
-            </text>
-          </svg>
+              <text
+                x="50%"
+                y="60"
+                textAnchor="middle"
+                style={{
+                  fontFamily: "'Aspekta', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+                  fontSize: '72px',
+                  fontWeight: 900,
+                  letterSpacing: '0.05em',
+                  fill: '#EEECF8',
+                  stroke: '#806AEA',
+                  strokeWidth: '14px',
+                  strokeLinejoin: 'round',
+                  strokeLinecap: 'round',
+                  paintOrder: 'stroke fill',
+                }}
+              >
+                Hello
+              </text>
+            </svg>
+            {/* Username text */}
+            <svg 
+              viewBox="0 0 400 80" 
+              style={{
+                width: '100%',
+                maxWidth: '95vw',
+                height: 'auto',
+                marginTop: '0',
+              }}
+            >
+              <text
+                x="50%"
+                y="60"
+                textAnchor="middle"
+                style={{
+                  fontFamily: "'Aspekta', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+                  fontSize: '72px',
+                  fontWeight: 900,
+                  letterSpacing: '0.05em',
+                  fill: '#EEECF8',
+                  stroke: '#806AEA',
+                  strokeWidth: '14px',
+                  strokeLinejoin: 'round',
+                  strokeLinecap: 'round',
+                  paintOrder: 'stroke fill',
+                }}
+              >
+                {getDisplayName(name).charAt(0).toUpperCase() + getDisplayName(name).slice(1)}
+              </text>
+            </svg>
+          </div>
         </div>
-        <p className="text-gray-200 text-base md:text-lg mt-8 text-center w-[80%] mx-auto font-extralight">
-          Scan the QR code to start the activity of your choice.
+        <p className="text-gray-200 text-base md:text-lg mt-8 text-center w-[80%] mx-auto font-extralight whitespace-nowrap">
+          {gameProgress?.isRedeemed ? "You have already redeemed the gift." : "Scan the QR code to redeem the gift."}
         </p>
       </div>
 
       {errorMessage && (
-        <div className="bg-red-500/90 text-white border border-red-300 rounded-lg p-3 mb-4 text-sm shadow max-w-md w-full">
-          {errorMessage}
+        <div className="text-center mb-4">
+          <p className="text-blue-400 text-base md:text-lg underline">
+            {errorMessage}
+          </p>
         </div>
       )}
 
-      {/* Activity Cards - In row for mobile and desktop */}
-      <div className="grid grid-cols-2 gap-4 mb-8 w-full max-w-2xl">
+      {/* Activity Cards - Single game */}
+      <div className="flex justify-center mb-8 w-full max-w-2xl">
         {ACTIVITIES.map((activity) => {
-          // Split title into words for multi-line display
-          const titleWords = activity.title.split(' ');
-          const firstLine = titleWords[0];
-          const secondLine = titleWords.slice(1, -1).join(' ');
-          const thirdLine = titleWords[titleWords.length - 1];
-
-          const progress = gameProgress?.[activity.type];
-          const isCompleted = progress?.completed || false;
+          // Game: only allow clicking if not redeemed
           const isRedeemed = gameProgress?.isRedeemed || false;
-          const gameStarted = activity.type === 'game' ? (gameProgress?.game?.gameStarted || false) : false;
-
-          // Photo: allow clicking always (multiple scans allowed)
-          // Game: allow clicking always (can scan start QR, then tier QRs)
-          const canClick = true;
+          const canClick = !isRedeemed;
 
           return (
             <div
               key={activity.id}
-              className={`bg-purple-100 rounded-xl shadow-lg p-3 flex flex-col transition-shadow ${
-                canClick ? 'cursor-pointer hover:shadow-xl' : 'cursor-not-allowed opacity-75'
+              className={`bg-purple-100 rounded-xl shadow-lg p-4 md:p-6 flex flex-row items-center justify-between transition-shadow w-[90%] ${
+                canClick ? 'cursor-pointer hover:shadow-xl' : 'cursor-default'
               }`}
-              style={{ backgroundColor: '#E8E0F5' }}
+              style={{ backgroundColor: '#E8E0F5', minHeight: '90px' }}
               onClick={() => canClick && handleOpenScanner(activity)}
             >
-              {/* GAME/PHOTO label at top - centered */}
-              <div className="mb-4 text-center">
-                <span className="text-[#291F5B] text-sm font-semibold uppercase">
-                  {activity.type === "game" ? "GAME" : "PHOTO"}
-                </span>
+              {/* Left side - Text content */}
+              <div className="flex flex-col flex-1 h-full justify-center">
+                {/* GAME label at top */}
+                <div className="mb-2">
+                  <span className="text-[#291F5B] text-xs md:text-sm font-semibold uppercase">
+                    GAME
+                  </span>
+                </div>
+                
+                {/* Title - Show "One-time gift redeemed" if redeemed, otherwise "Redeem Gift" */}
+                <div className="flex-1">
+                  {gameProgress?.isRedeemed ? (
+                    <h2 className="text-xl md:text-2xl font-heading font-black text-[#5933EB] leading-tight">
+                      One-time gift redeemed
+                    </h2>
+                  ) : (
+                    <h2 className="text-xl md:text-2xl font-heading font-black text-[#5933EB] leading-tight">
+                      {activity.title}
+                    </h2>
+                  )}
+                </div>
               </div>
               
-              {/* Title - centered, multi-line */}
-              <div className="flex-1 flex flex-col justify-center mb-4 text-center">
-                <h2 className="text-xl md:text-2xl font-heading font-black text-[#5933EB] leading-tight">
-                  {firstLine}
-                  {secondLine && <><br />{secondLine}</>}
-                  {thirdLine && <><br />{thirdLine}</>}
-                </h2>
-              </div>
-              
-              {/* QR icon at bottom - centered, fixed position */}
-              <div className="flex justify-center mb-2">
-                <img
-                  src="/qr-icon.svg"
-                  alt="QR Code"
-                  className="w-12 h-12"
-                />
-              </div>
-
-              {/* Completion status text - always reserve space for alignment */}
-              <div className="text-center h-5">
-                {activity.type === 'game' && isRedeemed ? (
-                  <p className="text-xs text-[#291F5B] font-semibold">
-                    One-time gift redeemed
-                  </p>
-                ) : activity.type === 'game' && gameStarted && !isCompleted ? (
-                  <p className="text-xs text-[#291F5B] font-semibold">
-                    Game Started
-                  </p>
-                ) : activity.type === 'game' && isCompleted ? (
-                  <p className="text-xs text-[#291F5B] font-semibold">
-                    Completed
-                  </p>
-                ) : (
-                  <div className="h-5"></div>
-                )}
-              </div>
+              {/* Right side - QR icon - only show if not redeemed */}
+              {!isRedeemed && (
+                <div className="flex items-center ml-4 h-full">
+                  <div 
+                    className="w-12 h-12 md:w-16 md:h-16"
+                    style={{
+                      backgroundColor: '#40388F',
+                      WebkitMask: 'url(/qr-icon.svg) no-repeat center / contain',
+                      mask: 'url(/qr-icon.svg) no-repeat center / contain',
+                      height: '100%',
+                      minHeight: '80px',
+                    }}
+                  />
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Redeem Gift Button - Show if game started and not redeemed */}
-      {gameProgress && gameProgress.game?.gameStarted && !gameProgress.isRedeemed && (
-        <div className="w-full max-w-2xl grid grid-cols-2 gap-4 mb-4">
-          <button
-            onClick={handleOpenRedeemScanner}
-            className="w-full text-white py-2 rounded-xl text-lg font-body font-semibold shadow-lg hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: '#7F6BEB' }}
-          >
-            Redeem Gift
-          </button>
-          <div></div>
-        </div>
-      )}
 
-      {/* Logout button */}
+      {/* Logout button - at bottom */}
       <button
         onClick={onLogout}
-        className="w-[90%] bg-[#61C9D6] text-white py-2 rounded-xl text-lg font-body shadow-lg hover:bg-[#4FB8C6] transition-colors mt-12 mb-8"
+        className="w-[90%] bg-[#61C9D6] text-white py-2 rounded-xl text-lg font-body shadow-lg hover:bg-[#4FB8C6] transition-colors mb-8 mt-auto"
       >
         Logout
       </button>
+      </div>
 
       {showScanner && selectedActivity && (
         <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
@@ -387,10 +320,10 @@ const Dashboard: React.FC<DashboardProps> = ({ name, onLogout }) => {
             </button>
 
             <h3 className="text-xl font-heading mb-2">
-              {isRedeemMode ? "Redeem Your Gift" : `Scan QR Code for ${selectedActivity.title}`}
+              Scan QR Code for {selectedActivity.title}
             </h3>
             <p className="text-sm text-gray-300 mb-4">
-              {isRedeemMode ? "Scan a tier QR code (TIER1 or TIER2) to redeem your gift." : selectedActivity.description}
+              Scan the QR code to redeem your gift.
             </p>
 
             <SimpleQRScanner

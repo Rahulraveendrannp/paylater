@@ -7,9 +7,12 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   return (
     <div 
-      className="min-h-screen flex flex-col items-center p-4 font-body"
+      className="min-h-screen flex flex-col items-center p-4 font-body relative"
       style={{
-        background: 'radial-gradient(circle at center, #4D3AAA 0%, #1F1744 100%)'
+        backgroundImage: 'url(/bg.svg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
       }}
     >
       {/* PayLater Logo - More at the top */}
@@ -22,11 +25,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         />
       </div>
 
-      {/* Main Title - STEP INTO THE ACTION SVG */}
+      {/* Main Title - Smart Slasher SVG */}
       <div className="text-center mb-2 flex-1 flex items-center justify-center">
         <img
-          src="/stepinto.svg"
-          alt="STEP INTO THE ACTION"
+          src="/smart slasher.svg"
+          alt="Smart Slasher"
           className="w-full max-w-md md:max-w-lg mx-auto"
         />
       </div>

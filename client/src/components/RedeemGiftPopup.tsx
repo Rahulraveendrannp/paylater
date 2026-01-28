@@ -14,9 +14,9 @@ const RedeemGiftPopup: React.FC<RedeemGiftPopupProps> = ({ onClose }) => {
   const handleScanSuccess = async (scannedQRCode: string): Promise<{ success: boolean; message?: string }> => {
     const trimmedQR = scannedQRCode.trim();
     
-    // Validate that it's a tier QR code
-    if (trimmedQR !== 'PAYLATER_GAME_TIER1' && trimmedQR !== 'PAYLATER_GAME_TIER2') {
-      const errorMsg = "Invalid QR code. Please scan a tier QR code (TIER1 or TIER2).";
+    // Validate QR code - only accept TIER1
+    if (trimmedQR !== 'PAYLATER_GAME_TIER1') {
+      const errorMsg = "Invalid QR code. Please scan the correct QR code.";
       setError(errorMsg);
       return { success: false, message: errorMsg };
     }
@@ -68,7 +68,7 @@ const RedeemGiftPopup: React.FC<RedeemGiftPopupProps> = ({ onClose }) => {
           Redeem Your Gift
         </h2>
         <p className="text-sm text-gray-300 mb-4">
-          Scan a tier QR code (TIER1 or TIER2) to redeem your gift.
+          Scan the QR code to redeem your gift.
         </p>
 
         {error && (

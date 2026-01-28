@@ -19,9 +19,7 @@ const errorHandler = (err, req, res, next) => {
     const field = Object.keys(err.keyValue)[0];
     // Provide user-friendly error messages
     let message;
-    if (field === 'redemptionQRCode') {
-      message = 'A technical error occurred. Please try again.';
-    } else if (field === 'phoneNumber') {
+    if (field === 'phoneNumber') {
       message = 'This phone number is already registered';
     } else {
       message = `${field} already exists`;

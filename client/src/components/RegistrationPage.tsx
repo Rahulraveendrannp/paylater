@@ -97,14 +97,13 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
       }}
     >
       <div className="flex flex-col items-center h-[80vh] my-auto w-full">
-      {/* Main Title - STEP INTO THE ACTION SVG - Smaller size */}
-      <div className="text-center mt-8 mb-2">
+      {/* Main Title - Smart Slasher SVG */}
+
         <img
-          src="/stepinto.svg"
-          alt="STEP INTO THE ACTION"
-          className="w-full max-w-[240px] md:max-w-[300px] mx-auto"
+          src="/howtoplay.svg"
+          alt="How to Play"
+          className="w-full max-w-[200px] md:max-w-[250px] mx-auto mt-8"
         />
-      </div>
 
       {/* Form section - Centered in middle - 90% width */}
       <div className="w-[90%] space-y-4 flex-1 flex flex-col justify-center mb-2">
