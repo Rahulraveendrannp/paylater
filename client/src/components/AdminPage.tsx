@@ -49,7 +49,7 @@ const AdminPage: React.FC = () => {
           // Generate QR code for the URL when modal opens
           QRCodeLib.toCanvas(
             qrCanvasRef.current,
-            "https://paylater-marathon.online/",
+            "https://interactqa.live/",
             {
               width: 300,
               margin: 4,
@@ -326,7 +326,7 @@ const AdminPage: React.FC = () => {
               Event QR Code
             </h3>
             <p className="text-sm text-gray-600 mb-4 text-center">
-              https://paylater-marathon.online/
+              https://interactqa.live/
             </p>
 
             <div className="flex flex-col items-center">

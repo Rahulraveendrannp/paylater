@@ -9,7 +9,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
     <div 
       className="h-screen w-screen flex flex-col items-center p-4 font-body overflow-hidden fixed inset-0"
       style={{
-        backgroundImage: 'url(/bg.svg)',
+        backgroundImage: 'url(/Name.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

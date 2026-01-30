@@ -5,53 +5,21 @@ interface RegistrationPageProps {
   onSuccess: (phoneNumber: string, name: string) => void;
 }
 
-// Country codes list
-const COUNTRY_CODES = [
-  { code: "+971", country: "UAE" },
-  { code: "+974", country: "Qatar" },
-  { code: "+966", country: "Saudi Arabia" },
-  { code: "+965", country: "Kuwait" },
-  { code: "+973", country: "Bahrain" },
-  { code: "+968", country: "Oman" },
-  { code: "+1", country: "USA/Canada" },
-  { code: "+44", country: "UK" },
-  { code: "+91", country: "India" },
-  { code: "+86", country: "China" },
-  { code: "+81", country: "Japan" },
-  { code: "+82", country: "South Korea" },
-  { code: "+65", country: "Singapore" },
-  { code: "+60", country: "Malaysia" },
-  { code: "+62", country: "Indonesia" },
-  { code: "+66", country: "Thailand" },
-  { code: "+84", country: "Vietnam" },
-  { code: "+61", country: "Australia" },
-  { code: "+64", country: "New Zealand" },
-  { code: "+27", country: "South Africa" },
-  { code: "+20", country: "Egypt" },
-  { code: "+33", country: "France" },
-  { code: "+49", country: "Germany" },
-  { code: "+39", country: "Italy" },
-  { code: "+34", country: "Spain" },
-  { code: "+31", country: "Netherlands" },
-  { code: "+32", country: "Belgium" },
-  { code: "+41", country: "Switzerland" },
-  { code: "+43", country: "Austria" },
-  { code: "+46", country: "Sweden" },
-  { code: "+47", country: "Norway" },
-  { code: "+45", country: "Denmark" },
-  { code: "+358", country: "Finland" },
-  { code: "+7", country: "Russia" },
-  { code: "+90", country: "Turkey" },
-];
 
 const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
   const [localPhone, setLocalPhone] = useState("");
   const [name, setName] = useState("");
-  const [countryCode, setCountryCode] = useState("+974"); // Default to Qatar
+  const [countryCode, setCountryCode] = useState(""); // Empty to show placeholder
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async () => {
+    // Validate country code (must have 1-3 digits)
+    if (!/^\d{1,3}$/.test(countryCode)) {
+      setError("Please enter a valid country code (e.g., 974)");
+      return;
+    }
+
     // Validate phone number format (at least 7 digits, max 15)
     if (!/^\d{7,15}$/.test(localPhone)) {
       setError("Please enter a valid phone number");
@@ -64,7 +32,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
       return;
     }
 
-    const phoneNumber = `${countryCode}${localPhone}`;
+    const phoneNumber = `+${countryCode}${localPhone}`;
 
     setIsLoading(true);
     setError("");
@@ -130,29 +98,25 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
         {/* Phone input - Country code in left section */}
         <div className="w-full">
           <div className="flex bg-white rounded-xl overflow-hidden">
-            <div className="w-[80px] md:w-[140px] relative px-1 py-3 bg-white border-r border-gray-300 text-[#5933EB] font-body flex items-center justify-center">
-              <select
+            <div className="w-[80px] md:w-[140px] px-2 py-3 bg-white border-r border-gray-300 text-[#5933EB] font-semibold flex items-center justify-center">
+              <input
+                type="text"
                 value={countryCode}
                 onChange={(e) => {
-                  setCountryCode(e.target.value);
-                  if (error) setError("");
+                  // Allow only digits
+                  const val = e.target.value.replace(/\D/g, "");
+                  // Limit to 3 digits
+                  if (val.length <= 3) {
+                    setCountryCode(val);
+                    if (error) setError("");
+                  }
                 }}
-                className="text-[#5933EB] focus:outline-none cursor-pointer appearance-none pr-4 md:pr-6 bg-transparent w-full text-base md:text-base text-center"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2361C9D6' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.5rem center',
-                  textAlign: 'center',
-                  textAlignLast: 'center',
-                }}
+                className="text-[#5933EB] focus:outline-none bg-transparent w-full text-base md:text-base text-center font-semibold placeholder:text-[#5933EB] placeholder:opacity-50"
+                placeholder="974"
                 disabled={isLoading}
-              >
-                {COUNTRY_CODES.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.code}
-                  </option>
-                ))}
-              </select>
+                maxLength={3}
+                inputMode="numeric"
+              />
             </div>
             <input
               type="tel"
@@ -162,8 +126,8 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
                 setLocalPhone(val);
                 if (error) setError("");
               }}
-              className="flex-1 px-3 md:px-4 py-3 bg-white text-gray-800 focus:outline-none font-semibold text-base md:text-base"
-              placeholder=""
+              className="flex-1 px-3 md:px-4 py-3 bg-white text-gray-800 focus:outline-none font-semibold text-base md:text-base placeholder:text-gray-400"
+              placeholder="12345678"
               disabled={isLoading}
               maxLength={15}
               inputMode="numeric"
@@ -180,7 +144,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
       {/* Submit button - At bottom - 90% width */}
       <button
         onClick={handleSubmit}
-        disabled={isLoading || localPhone.length < 7 || !name.trim()}
+        disabled={isLoading || localPhone.length < 7 || !name.trim() || !/^\d{1,3}$/.test(countryCode)}
         className="w-[90%] mt-auto mb-8 py-3 rounded-xl bg-[#61C9D6] text-white text-lg font-body font-bold shadow-lg hover:bg-[#0D9488] disabled:opacity-60 disabled:cursor-not-allowed transition"
       >
         {isLoading ? "Registering..." : "Let's Go"}
