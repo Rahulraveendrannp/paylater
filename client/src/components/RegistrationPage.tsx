@@ -9,7 +9,7 @@ interface RegistrationPageProps {
 const RegistrationPage: React.FC<RegistrationPageProps> = ({ onSuccess }) => {
   const [localPhone, setLocalPhone] = useState("");
   const [name, setName] = useState("");
-  const [countryCode, setCountryCode] = useState(""); // Empty to show placeholder
+  const [countryCode, setCountryCode] = useState("974"); // Default to 974, user can edit
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
